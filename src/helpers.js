@@ -1,19 +1,19 @@
 const ndarray = require("ndarray")
 
-const frombuffer = (xs, { dtype }) => {
+const frombuffer = (xs, { dtype, shape }) => {
   switch (dtype) {
     case "b":
-      return ndarray(new Int8Array(xs))
+      return ndarray(new Int8Array(xs), shape)
     case "c":
-      return ndarray(xs)
+      return ndarray(xs, shape)
     case "h":
-      return ndarray(new Int16Array(xs))
+      return ndarray(new Int16Array(xs), shape)
     case "i":
-      return ndarray(new Int32Array(xs))
+      return ndarray(new Int32Array(xs), shape)
     case "d":
-      return ndarray(new Float64Array(xs))
+      return ndarray(new Float64Array(xs), shape)
     default:
-      return ndarray(new Float32Array(xs))
+      return ndarray(new Float32Array(xs), shape)
   }
 }
 

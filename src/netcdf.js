@@ -1,26 +1,17 @@
-const { promises: fs } = require("fs")
-const ndarray = require("ndarray")
-const { ByteReader } = require("./bytes")
-const { mul, mod, frombuffer } = require("./helpers")
+const { promises: fs } = require('fs')
+const ndarray = require('ndarray')
+const { ByteReader } = require('./bytes')
+const { mul, mod, frombuffer } = require('./helpers')
 const {
   ABSENT,
   ZERO,
-  NC_BYTES,
-  NC_CHAR,
-  NC_SHORT,
-  NC_INT,
-  NC_FLOAT,
-  NC_DOUBLE,
   NC_DIMENSION,
   NC_VARIABLE,
   NC_ATTRIBUTE,
   STREAMING,
-  CLASSIC_FORMAT,
-  OFFSET_FORMAT_64_BIT,
-  FORMATS,
   FORMATCODES,
   TYPEMAP,
-} = require("./constants")
+} = require('./constants')
 
 class NetCDF {
   constructor(source) {
@@ -43,10 +34,7 @@ class NetCDF {
   readVarArray() {
     const header = this.bytes.string({ length: 4 })
     if (header !== ZERO && header !== NC_VARIABLE)
-      throw new Error("Malformed variable")
-    let begin = 0
-    const dtypes = { names: [], formats: [] }
-    const recordVars = []
+      throw new Error('Malformed variable')
     const count = this.bytes.int32()
     for (let i = 0; i < count; i++) {
       const {
@@ -57,36 +45,14 @@ class NetCDF {
         attributes,
         size,
         dtype,
-        begin: begin_,
+        begin,
         vsize,
       } = this._readVar()
-      let data
-      if (shape && !shape[0]) {
-        recordVars.push(name)
-        this._recsize += vsize
-        if (begin === 0) begin = begin_
-        dtypes.names.push(name)
-        dtypes.formats.push(shape.slice(1).toString() + dtype)
-        if ([..."bch"].includes(typecode)) {
-          const actualSize = shape.slice(1).reduce(mul, 1) * size
-          const padding = mod(-actualSize, 4)
-          if (padding) {
-            dtypes.names.push(`_padding_${i}`)
-            dtypes.formats.push(`(${padding},)>b`)
-          }
-        }
-      } else {
-        const actualSize = shape.reduce(mul, 1) * size
-        if (this.useMMap) {
-          //TODO: complete later
-        } else {
-          const position = this.bytes.position
-          this.bytes.seek(begin_)
-          data = frombuffer(this.bytes.read(actualSize), { dtype })
-          data.shape = shape
-          this.bytes.seek(position)
-        }
-      }
+      const actualSize = [...shape, size].reduce(mul)
+      const position = this.bytes.position
+      this.bytes.seek(begin)
+      const data = frombuffer(this.bytes.read(actualSize), { dtype, shape })
+      this.bytes.seek(position)
       this.variables[name] = NetCDFVariable.from({
         data,
         name,
@@ -99,28 +65,6 @@ class NetCDF {
         begin,
         vsize,
       })
-    }
-    let recordsArray
-    if (recordVars) {
-      if (recordVars.length === 1) {
-        dtypes.names = dtypes.names.slice(1)
-        dtypes.formats = dtypes.formats.slice(1)
-      }
-      if (this.useMMap) {
-        //TODO: complete later
-      } else {
-        const position = this.bytes.position
-        this.bytes.seek(begin)
-        recordsArray = frombuffer(this.bytes.read(this._recs * this._recsize), {
-          dtype: dtypes,
-        })
-        recordsArray.shape = this._recs
-        this.bytes.seek(position)
-      }
-      console.log({ recordsArray })
-      for (let v of recordVars) {
-        this.variables[v].data = recordsArray[v]
-      }
     }
   }
   _readVar() {
@@ -144,7 +88,7 @@ class NetCDF {
     return {
       name,
       dimensions,
-      shape,
+      shape: shape[0] === 0 ? shape.slice(1) : shape,
       attributes,
       size,
       typecode,
@@ -161,7 +105,7 @@ class NetCDF {
   readAttArray() {
     const header = this.bytes.string({ length: 4 })
     if (header !== ZERO && header !== NC_ATTRIBUTE)
-      throw new Error("Unexpected Attribute Header")
+      throw new Error('Unexpected Attribute Header')
     const count = this.bytes.int32()
     const attrs = {}
     for (let i = 0; i < count; i++) {
@@ -183,13 +127,13 @@ class NetCDF {
     const count = n * size
     let values = this.bytes.read(parseInt(count))
 
-    if (typecode !== "c") {
+    if (typecode !== 'c') {
       values = frombuffer(values, { dtype: typecode })
       if (values.shape.length === 1 && values.shape[0] === 1) {
         values = values[0]
       }
     } else {
-      values = values.toString().trimRight("\x00")
+      values = values.toString().trimRight('\x00')
     }
     this.bytes.read(mod(-count, 4))
     return values
@@ -206,7 +150,7 @@ class NetCDF {
       this.bytes.rewind(8)
       this.ncDimension = this.bytes.string({ length: 4 })
       if (this.ncDimension !== NC_DIMENSION)
-        throw new Error("Invalid NC Dimension")
+        throw new Error('Invalid NC Dimension')
       const count = this.bytes.int32()
       for (let i = 0; i < count; i++) {
         const name = this._readString()
