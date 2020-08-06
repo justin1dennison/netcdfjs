@@ -4,4 +4,5 @@
   const filename = "./data/example_1.nc";
   const nc = await NetCDF.fromFile(filename);
   console.log({ nc })
+  console.log(nc.variables)
 })().catch(e => console.error(e))
