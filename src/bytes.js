@@ -26,12 +26,12 @@ const ByteReader = (buffer, { endian = Endian.BIG } = {}) => ({
   double() {
     return this.endian === Endian.BIG
       ? this.read(8).readDoubleBE()
-      : this.read(8).readDoubleLE() 
+      : this.read(8).readDoubleLE()
   },
   float() {
     return this.endian === Endian.BIG
-	  ? this.read(4).readFloatBE()
-	  : this.read(4).readFloatLE()
+      ? this.read(4).readFloatBE()
+      : this.read(4).readFloatLE()
   },
   int8() {
     return this.read(1).readInt8()
@@ -51,8 +51,8 @@ const ByteReader = (buffer, { endian = Endian.BIG } = {}) => ({
       ? this.read(8).readInt64BE()
       : this.read(8).readInt64LE()
   },
-  uint8 () {
-     return this.read(1).readUInt8() 
+  uint8() {
+    return this.read(1).readUInt8()
   },
   uint16() {
     return this.endian === Endian.BIG
@@ -68,7 +68,7 @@ const ByteReader = (buffer, { endian = Endian.BIG } = {}) => ({
     return this.endian === Endian.BIG
       ? this.read(8).readUInt64BE()
       : this.read(8).readUInt64LE()
-  }
+  },
 })
 
 module.exports = { ByteReader }

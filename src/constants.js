@@ -11,6 +11,7 @@ const Endian = {
 
 Object.freeze(SeekFrom)
 Object.freeze(Endian)
+
 const ABSENT = "\x00\x00\x00\x00\x00\x00\x00\x00"
 const ZERO = "\x00\x00\x00\x00"
 const NC_BYTE = "\x00\x00\x00\x01"
