@@ -1,6 +1,6 @@
 const { SeekFrom, Endian } = require("./constants")
 
-const Bytes = (buffer, { endian = Endian.BIG } = {}) => ({
+const ByteReader = (buffer, { endian = Endian.BIG } = {}) => ({
   endian,
   buffer,
   position: 0,
@@ -23,6 +23,16 @@ const Bytes = (buffer, { endian = Endian.BIG } = {}) => ({
     this.forward(n)
     return data
   },
+  double() {
+    return this.endian === Endian.BIG
+      ? this.read(8).readDoubleBE()
+      : this.read(8).readDoubleLE() 
+  },
+  float() {
+    return this.endian === Endian.BIG
+	  ? this.read(4).readFloatBE()
+	  : this.read(4).readFloatLE()
+  },
   int8() {
     return this.read(1).readInt8()
   },
@@ -36,11 +46,29 @@ const Bytes = (buffer, { endian = Endian.BIG } = {}) => ({
       ? this.read(4).readInt32BE()
       : this.read(4).readInt32LE()
   },
+  int64() {
+    return this.endian === Endian.BIG
+      ? this.read(8).readInt64BE()
+      : this.read(8).readInt64LE()
+  },
+  uint8 () {
+     return this.read(1).readUInt8() 
+  },
+  uint16() {
+    return this.endian === Endian.BIG
+      ? this.read(4).readUInt16BE()
+      : this.read(4).readUInt16LE()
+  },
   uint32() {
     return this.endian === Endian.BIG
       ? this.read(4).readUInt32BE()
       : this.read(4).readUInt32LE()
   },
+  uint64() {
+    return this.endian === Endian.BIG
+      ? this.read(8).readUInt64BE()
+      : this.read(8).readUInt64LE()
+  }
 })
 
-module.exports = Bytes
+module.exports = { ByteReader }

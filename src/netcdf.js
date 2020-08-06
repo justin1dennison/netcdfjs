@@ -1,6 +1,6 @@
 const { promises: fs } = require("fs")
 const ndarray = require("ndarray")
-const Bytes = require("./bytes")
+const { ByteReader } = require("./bytes")
 const { mod, fromstring } = require("./helpers")
 const {
   ABSENT,
@@ -30,7 +30,7 @@ class NetCDF {
     this._dims = []
     this._recs = []
     this._recsize = 0
-    this.bytes = Bytes(source)
+    this.bytes = ByteReader(source)
     this.magic = this.bytes.string({ length: 3 })
     this.version = this.bytes.int8()
     this.format = FORMATCODES[this.version]
