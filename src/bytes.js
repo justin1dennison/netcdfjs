@@ -1,16 +1,4 @@
-const SeekFrom = {
-  ABSOLUTE: 0,
-  RELATIVE: 1,
-  END: 2,
-}
-
-const Endian = {
-  LITTLE: "little",
-  BIG: "big",
-}
-
-Object.freeze(SeekFrom)
-Object.freeze(Endian)
+const { SeekFrom, Endian } = require("./constants")
 
 const Bytes = (buffer, { endian = Endian.BIG } = {}) => ({
   endian,
@@ -55,4 +43,4 @@ const Bytes = (buffer, { endian = Endian.BIG } = {}) => ({
   },
 })
 
-module.exports =  Bytes 
+module.exports = Bytes
