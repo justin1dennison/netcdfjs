@@ -1,7 +1,7 @@
 const { promises: fs } = require('fs')
 const ndarray = require('ndarray')
 const { ByteReader } = require('./bytes')
-const { mul, mod, frombuffer } = require('./helpers')
+const { mul, mod, frombuffer, jsonify } = require('./helpers')
 const {
   ABSENT,
   ZERO,
@@ -168,15 +168,16 @@ class NetCDF {
 }
 
 class NetCDFVariable {
-  constructor(data, typecode, size, shape, dimensions, attributes = {}) {
+  constructor(name, data, typecode, size, shape, dimensions, attributes = {}) {
+    this.name = name
     this.data = data
     this.typecode = typecode
     this.size = size
-    this.shape = shape
     this.dimensions = dimensions
     this.attributes = attributes
   }
   static from({
+    name, 
     data,
     typecode,
     size,
@@ -185,6 +186,7 @@ class NetCDFVariable {
     attributes = {},
   } = {}) {
     return new NetCDFVariable(
+      name,
       data,
       typecode,
       size,
@@ -193,7 +195,24 @@ class NetCDFVariable {
       attributes
     )
   }
-}
+  get shape() {
+    return this.data.shape 
+  }
+  get(...idxs) {
+    return this.data.get(...idxs) 
+  } 
+  toString() {
+    return `
+    NetCDFVariable(${this.name})
+	Shape: ${this.shape}
+	Size: ${this.size}
+	Dimensions: ${this.dimensions}
+	Attributes: ${jsonify(this.attributes, 10)}
+	` 
+  }
+} 
+
+
 
 module.exports = {
   NetCDF,

@@ -21,4 +21,6 @@ const mod = (n, k) => ((n % k) + k) % k
 
 const mul = (x, y) => x * y
 
-module.exports = { frombuffer, mod, mul }
+const jsonify = (x, padding=2) => JSON.stringify(x, null, padding)
+
+module.exports = { frombuffer, mod, mul, jsonify }
