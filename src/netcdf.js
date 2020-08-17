@@ -13,21 +13,21 @@ import {
   TYPEMAP,
 } from './constants'
 
-const string = (reader) => {
+function string(reader) {
   const length = reader.uint32()
   const name = reader.string({ length })
   reader.read(mod(-length, 4))
   return name
 }
 
-const numrecs = (reader) => {
+function numrecs({ reader }) {
   const streaming = reader.string({ length: 4 }) === STREAMING
   reader.rewind(4)
   const numRecs = streaming ? STREAMING : reader.int32()
   return { streaming, numRecs }
 }
 
-const dimensions = (reader) => {
+function dimensions({ reader }) {
   const absentDimList = reader.string({ length: 8 }) === ABSENT
   const dimensions = {}
   const _dims = []
@@ -46,7 +46,7 @@ const dimensions = (reader) => {
   return { absentDimList, dimensions, _dims }
 }
 
-const values = (reader) => {
+function values(reader) {
   const type = reader.string({ length: 4 })
   const n = reader.int32()
   const [typecode, size] = TYPEMAP[type]
@@ -65,7 +65,7 @@ const values = (reader) => {
   return values
 }
 
-const attrs = (reader) => {
+function attrs(reader) {
   const attrs = {}
   const header = reader.string({ length: 4 })
   if (header !== ZERO && header !== NC_ATTRIBUTE)
@@ -77,7 +77,7 @@ const attrs = (reader) => {
   }
   return attrs
 }
-const gattrs = (reader) => {
+function gattrs({ reader }) {
   return Object.entries(attrs(reader)).reduce((acc, n) => {
     const [k, v] = n
     acc[k] = v
@@ -85,7 +85,7 @@ const gattrs = (reader) => {
   }, {})
 }
 
-const variable = (reader, { _dims, dimensions, version }) => {
+function variable({ reader, _dims, dimensions, version }) {
   const name = string(reader)
   const ds = []
   const shape = []
@@ -116,13 +116,16 @@ const variable = (reader, { _dims, dimensions, version }) => {
   }
 }
 
-const variables = (reader, dataset) => {
+function variables(dataset) {
+  const { reader } = dataset
+  console.log({ dataset })
   const header = reader.string({ length: 4 })
   const variables = {}
   if (header !== ZERO && header !== NC_VARIABLE)
     throw new Error('Malformed variable')
   const count = reader.int32()
   for (let i = 0; i < count; i++) {
+    const v = variable(dataset)
     const {
       name,
       dimensions,
@@ -133,13 +136,13 @@ const variables = (reader, dataset) => {
       dtype,
       begin,
       vsize,
-    } = variable(reader, dataset)
+    } = v
     const actualSize = [...shape, size].reduce(mul)
     const position = reader.position
     reader.seek(begin)
     const data = frombuffer(reader.read(actualSize), { dtype, shape })
     reader.seek(position)
-    variables[name] = {
+    variables[name] = NetCDFVariable.of({
       data,
       name,
       dimensions,
@@ -150,7 +153,7 @@ const variables = (reader, dataset) => {
       dtype,
       begin,
       vsize,
-    }
+    })
   }
   return variables
 }
@@ -165,11 +168,11 @@ export class NetCDF {
     Object.assign(
       this,
       { magic, version, format },
-      numrecs(this.reader),
-      dimensions(this.reader),
-      { attrs: gattrs(this.reader) },
-      // { variables: variables(this.reader, this) }
+      numrecs(this),
+      dimensions(this)
     )
+    this.attrs = gattrs(this)
+    this.variables = variables(this)
   }
   static async fromFile(filepath) {
     const source = await fs.readFile(filepath)
@@ -186,7 +189,7 @@ class NetCDFVariable {
     this.dimensions = dimensions
     this.attributes = attributes
   }
-  static from({
+  static of({
     name,
     data,
     typecode,
