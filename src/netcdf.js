@@ -1,8 +1,7 @@
-const { promises: fs } = require('fs')
-const ndarray = require('ndarray')
-const { ByteReader } = require('./bytes')
-const { mul, mod, frombuffer, jsonify } = require('./helpers')
-const {
+import { promises as fs } from 'fs'
+import { ByteReader } from '@justin1dennison/bytesjs'
+import { mul, mod, frombuffer, jsonify } from './helpers'
+import {
   ABSENT,
   ZERO,
   NC_DIMENSION,
@@ -11,9 +10,9 @@ const {
   STREAMING,
   FORMATCODES,
   TYPEMAP,
-} = require('./constants')
+} from './constants'
 
-class NetCDF {
+export class NetCDF {
   constructor(source) {
     this.dimensions = {}
     this.variables = {}
@@ -21,7 +20,7 @@ class NetCDF {
     this._dims = []
     this._recs = 0
     this._recsize = 0
-    this.bytes = ByteReader(source)
+    this.bytes = ByteReader.of(source)
     this.magic = this.bytes.string({ length: 3 })
     this.version = this.bytes.int8()
     this.format = FORMATCODES[this.version]
@@ -214,6 +213,3 @@ class NetCDFVariable {
 
 
 
-module.exports = {
-  NetCDF,
-}

@@ -1,6 +1,6 @@
-const ndarray = require("ndarray")
+import ndarray from "ndarray"
 
-const frombuffer = (xs, { dtype, shape }) => {
+export const frombuffer = (xs, { dtype, shape }) => {
   switch (dtype) {
     case "b":
       return ndarray(new Int8Array(xs), shape)
